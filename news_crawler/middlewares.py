@@ -27,6 +27,7 @@ class SeleniumMiddleware:
 
     def process_request(self, request, spider):
         self.driver.get(request.url)
+        self.driver.refresh()  # because TIMES' pagination is weird
         body = self.driver.page_source
         return HtmlResponse(self.driver.current_url, body=body, encoding='utf-8', request=request)
 

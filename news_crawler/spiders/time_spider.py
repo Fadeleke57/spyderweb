@@ -26,10 +26,12 @@ class Neo4jConnection:
 class TimeSpider(scrapy.Spider):
     name = "time"
     max_depth = 3  # deepest layer the spider should scrape 
+    article_ids = {}
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
         self.search_term = search_term
+        self.conn = Neo4jConnection(uri="", user="", password="")
 
     def start_requests(self):
         search_term = self.search_term
@@ -51,8 +53,6 @@ class TimeSpider(scrapy.Spider):
             if article_link:
                 yield SeleniumRequest(url=article_link, callback=self.parse_article, meta={'depth': response.meta['depth'] + 1})
 
-
-
     def parse_article(self, response):
         if response.status != 200:
             self.logger.error(f"Failed to retrieve article: {response.url} with status {response.status}")
@@ -61,6 +61,7 @@ class TimeSpider(scrapy.Spider):
         header = response.css('h1::text').get()
         link_to_article = response.url
         depth = response.meta['depth']
+        parent_id = response.meta.get('parent_id', None)
 
         if depth > self.max_depth:
             self.logger.info(f"Reached maximum depth of {self.max_depth} for link: {link_to_article}")
@@ -79,12 +80,18 @@ class TimeSpider(scrapy.Spider):
         nested_links = response.css('p a::attr(href)').getall()  # nested links are <a> tags within <p> tags
         nested_links = [response.urljoin(url) for url in nested_links]
 
+        article_id = link_to_article.split("/")[4]
+        self.conn.create_article_node(article_id, header, author, date, link_to_article, full_text)
+
+        if parent_id:
+            self.conn.create_relationship(parent_id, article_id)
+
         cant_be_scraped = [] #to get a sense of how many links outside of the general time format
         filtered_links = []
         self.logger.info(f"These links could not be scraped: {cant_be_scraped}")
 
         for link in nested_links:
-            if (link.startswith('http://time.com/') or link.startswith('https://time.com/')) and ('/tag/' not in link) :
+            if (link.startswith('http://time.com/') or link.startswith('https://time.com/')) and ('/tag/' not in link) and ('/time-person-of' not in link) :
                 filtered_links.append(link)
             else:
                 cant_be_scraped.append(link)
@@ -100,7 +107,10 @@ class TimeSpider(scrapy.Spider):
         }
 
         for nested_link in filtered_links:
-            yield SeleniumRequest(url=nested_link, callback=self.parse_article, meta={'depth': depth + 1})
+            yield SeleniumRequest(url=nested_link, callback=self.parse_article, meta={'depth': depth + 1, 'parent_id': article_id})
+
+    def closed(self, reason):
+            self.conn.close()
 """
 ------------------DEBUGGING UTILITY-----------------------------------------------      
 
@@ -119,14 +129,12 @@ Speed of css selectors***********************
 7. Universal, i.e. *
 8. Attribute, e.g. [type="text"]
 9. Pseudo-classes/-elements, e.g. a:hover
+   
 
-neo4j auth***********
+-delete all nodes query
 
-NEO4J_URI=neo4j+s://d0e8bb89.databases.neo4j.io
-NEO4J_USERNAME=neo4j
-NEO4J_PASSWORD=wN2ZcdiQ8NkfUciltN1kCwdSUQO7fz7x18XuFqL9rW0
-AURA_INSTANCEID=d0e8bb89
-AURA_INSTANCENAME=Instance01        
+MATCH (n)
+DETACH DELETE n
 
 for pages after the first in search results*************
 

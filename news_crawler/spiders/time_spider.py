@@ -2,11 +2,14 @@ import scrapy
 from scrapy_selenium import SeleniumRequest
 from neo4j import GraphDatabase
 from textblob import TextBlob
+from .spider_models.relevance_model import Relevance_Model
 from dotenv import load_dotenv
+import nltk
+nltk.download('wordnet')
 import os
 
 load_dotenv()
-#from ...relevance_model.train_model import calculate_similarity
+
 
 class Neo4jConnection:
     def __init__(self, uri, user, password):
@@ -33,6 +36,7 @@ class TimeSpider(scrapy.Spider):
     name = "time"
     max_depth = 2  # deepest layer the spider should scrape 
     article_ids = {}
+    model_connection = Relevance_Model()
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)

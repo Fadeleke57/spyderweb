@@ -1,6 +1,12 @@
 import scrapy
 from scrapy_selenium import SeleniumRequest
 from neo4j import GraphDatabase
+from textblob import TextBlob
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+#from ...relevance_model.train_model import calculate_similarity
 
 class Neo4jConnection:
     def __init__(self, uri, user, password):
@@ -9,12 +15,12 @@ class Neo4jConnection:
     def close(self):
         self.driver.close()
 
-    def create_article_node(self, article_id, header, author, date_published, link, text):
+    def create_article_node(self, article_id, header, author, date_published, link, text, sentiment, subjectivity):
         with self.driver.session() as session:
             session.run(
                 "MERGE (a:Article {id: $article_id}) "
-                "ON CREATE SET a.header = $header, a.author = $author, a.date_published = $date_published, a.link = $link, a.text = $text",
-                article_id=article_id, header=header, author=author, date_published=date_published, link=link, text=text)
+                "ON CREATE SET a.header = $header, a.author = $author, a.date_published = $date_published, a.link = $link, a.text = $text, a.sentiment = $sentiment, a.subjectivity = $subjectivity",
+                article_id=article_id, header=header, author=author, date_published=date_published, link=link, text=text, sentiment=sentiment, subjectivity=subjectivity)
 
     def create_relationship(self, from_id, to_id):
         with self.driver.session() as session:
@@ -25,13 +31,16 @@ class Neo4jConnection:
 
 class TimeSpider(scrapy.Spider):
     name = "time"
-    max_depth = 3  # deepest layer the spider should scrape 
+    max_depth = 2  # deepest layer the spider should scrape 
     article_ids = {}
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
         self.search_term = search_term
-        self.conn = Neo4jConnection(uri="", user="", password="")
+        URI = os.getenv("NEO4J_URI")
+        USERNAME = os.getenv("NEO4J_USERNAME")
+        PASSWORD = os.getenv("NEO4J_PASSWORD")
+        self.conn = Neo4jConnection(uri=URI, user=USERNAME, password=PASSWORD)
 
     def start_requests(self):
         search_term = self.search_term
@@ -77,11 +86,15 @@ class TimeSpider(scrapy.Spider):
         paragraphs = response.css('p').xpath('string(.)').getall()
         full_text = " ".join(paragraphs)
 
+        article_blob = TextBlob(full_text)
+        article_polarity, article_subjectivity = article_blob.sentiment
+        
+
         nested_links = response.css('p a::attr(href)').getall()  # nested links are <a> tags within <p> tags
         nested_links = [response.urljoin(url) for url in nested_links]
 
         article_id = link_to_article.split("/")[4]
-        self.conn.create_article_node(article_id, header, author, date, link_to_article, full_text)
+        self.conn.create_article_node(article_id, header, author, date, link_to_article, full_text, article_polarity, article_subjectivity)
 
         if parent_id:
             self.conn.create_relationship(parent_id, article_id)
@@ -104,6 +117,8 @@ class TimeSpider(scrapy.Spider):
             'link_to_article': link_to_article,
             'text': full_text,
             'nested_links': filtered_links,
+            'sentiment_score': article_polarity,
+            'subjectivity_score': article_subjectivity
         }
 
         for nested_link in filtered_links:
@@ -129,9 +144,8 @@ Speed of css selectors***********************
 7. Universal, i.e. *
 8. Attribute, e.g. [type="text"]
 9. Pseudo-classes/-elements, e.g. a:hover
-   
 
--delete all nodes query
+delete all nodes query*************
 
 MATCH (n)
 DETACH DELETE n
@@ -142,4 +156,13 @@ if pagination is needed, uncomment and use below
     for i in range(2, 4):
     next_page_url = f'https://time.com/search/?q={self.search_term}&page={i}'
     yield SeleniumRequest(url=next_page_url, callback=self.parse_search_results, meta={'depth': response.meta['depth']})
+
+TextBlob info*****
+
+>>> testimonial = TextBlob("Textblob is amazingly simple to use. What great fun!")
+>>> testimonial.sentiment
+Sentiment(polarity=0.39166666666666666, subjectivity=0.4357142857142857)
+>>> testimonial.sentiment.polarity
+0.39166666666666666
+
 """

@@ -1,6 +1,5 @@
 import nltk
 from nltk.tokenize import sent_tokenize
-import gensim
 from gensim.parsing.preprocessing import preprocess_string, remove_stopwords, strip_punctuation, strip_numeric
 from gensim.corpora import Dictionary
 from gensim.models import TfidfModel
@@ -9,7 +8,7 @@ from gensim.similarities import MatrixSimilarity
 nltk.download('punkt')
 
 class RelevanceModel:
-    def __init__(self, article, use_nltk=False):
+    def __init__(self, article : str, use_nltk=False):
         """
         Initializes the RelevanceModel with a given article (a large body of text).
         
@@ -25,7 +24,7 @@ class RelevanceModel:
         self.dictionary, self.corpus = self.create_corpus(self.texts)
         self.tfidf_model = self.train_tfidf(self.corpus)
 
-    def split_into_sentences_nltk(self, text):
+    def split_into_sentences_nltk(self, text : str) -> list :
         """
         Splits the given text into sentences using NLTK's sentence tokenizer.
         
@@ -37,7 +36,7 @@ class RelevanceModel:
         """
         return sent_tokenize(text)
 
-    def split_into_sentences_simple(self, text):
+    def split_into_sentences_simple(self, text : str) -> list:
         """
         Splits the given text into sentences using simple string splitting.
         
@@ -50,7 +49,7 @@ class RelevanceModel:
         import re
         return re.split(r'(?<=[.!?]) +', text)
 
-    def preprocess(self, text):
+    def preprocess(self, text : str) -> list:
         """
         Preprocesses the given text by applying a series of custom filters to remove punctuation, numeric characters, and stopwords.
         
@@ -63,7 +62,7 @@ class RelevanceModel:
         CUSTOM_FILTERS = [strip_punctuation, strip_numeric, remove_stopwords]
         return preprocess_string(text, CUSTOM_FILTERS)
 
-    def create_corpus(self, texts):
+    def create_corpus(self, texts : str) -> tuple:
         """
         Creates a corpus from a list of texts by preprocessing and converting them into a bag-of-words representation.
         
@@ -78,7 +77,7 @@ class RelevanceModel:
         corpus = [dictionary.doc2bow(text) for text in processed_texts]
         return dictionary, corpus
 
-    def train_tfidf(self, corpus):
+    def train_tfidf(self, corpus : list) -> TfidfModel:
         """
         Trains a TF-IDF model using the given corpus.
         
@@ -90,7 +89,7 @@ class RelevanceModel:
         """
         return TfidfModel(corpus)
 
-    def calculate_similarity(self, text1, text2):
+    def calculate_similarity(self, text1 : str, text2 : str) -> float:
         """
         Calculates the similarity score between two texts using TF-IDF and MatrixSimilarity.
         
@@ -111,7 +110,7 @@ class RelevanceModel:
         sims = index[tfidf2]
         return sims[0]
 
-    def get_relevance_score(self, text1, text2):
+    def get_relevance_score(self, text1 : str, text2 : str) -> float:
         """
         Calculates the relevance score between two texts.
         

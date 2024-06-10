@@ -2,12 +2,9 @@ import scrapy
 from scrapy_selenium import SeleniumRequest
 from neo4j import GraphDatabase
 from textblob import TextBlob
-from ..spider_models.relevance_model import Relevance_Model
+from ..spider_models.relevance_model import RelevanceModel
 from dotenv import load_dotenv
-import nltk
-nltk.download('wordnet')
 import os
-
 load_dotenv()
 
 class Neo4jConnection:
@@ -17,6 +14,11 @@ class Neo4jConnection:
     def close(self):
         self.driver.close()
 
+    def get_article_by_id(self, article_id):
+        with self.driver.session() as session:
+            result = session.run("MATCH (a:Article {id: $article_id}) RETURN a.id AS id, a.text AS text", article_id=article_id)
+            return result.single()
+
     def create_article_node(self, article_id, header, author, date_published, link, text, sentiment, subjectivity):
         with self.driver.session() as session:
             session.run(
@@ -24,18 +26,17 @@ class Neo4jConnection:
                 "ON CREATE SET a.header = $header, a.author = $author, a.date_published = $date_published, a.link = $link, a.text = $text, a.sentiment = $sentiment, a.subjectivity = $subjectivity",
                 article_id=article_id, header=header, author=author, date_published=date_published, link=link, text=text, sentiment=sentiment, subjectivity=subjectivity)
 
-    def create_relationship(self, from_id, to_id):
+    def create_relationship_with_score(self, from_id, to_id, score):
         with self.driver.session() as session:
             session.run(
                 "MATCH (a:Article {id: $from_id}), (b:Article {id: $to_id}) "
-                "MERGE (a)-[:REFERENCES]->(b)",
-                from_id=from_id, to_id=to_id)
+                "MERGE (a)-[:REFERENCES {score: $score}]->(b)",
+                from_id=from_id, to_id=to_id, score=score)
 
 class TimeSpider(scrapy.Spider):
     name = "time"
-    max_depth = 4  # deepest layer the spider should scrape 
+    max_depth = 5  # deepest layer the spider should scrape 
     article_ids = {}
-    #model_connection = Relevance_Model()
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
@@ -44,6 +45,18 @@ class TimeSpider(scrapy.Spider):
         USERNAME = os.getenv("NEO4J_USERNAME")
         PASSWORD = os.getenv("NEO4J_PASSWORD")
         self.conn = Neo4jConnection(uri=URI, user=USERNAME, password=PASSWORD)
+         
+        try:
+            with open("news_crawler\data\central_corpus.txt", 'r', encoding='utf-8') as file:
+                central_corpus = file.read()
+        except UnicodeDecodeError:
+            try:
+                with open("news_crawler\data\central_corpus.txt", 'r', encoding='latin-1') as file:
+                    central_corpus = file.read()
+            except UnicodeDecodeError as e:
+                self.logger.error(f"Failed to read central corpus file at path") 
+   
+        self.relevance_model = RelevanceModel(article=central_corpus, use_nltk=False)
 
     def start_requests(self):
         search_term = self.search_term
@@ -100,7 +113,9 @@ class TimeSpider(scrapy.Spider):
         self.conn.create_article_node(article_id, header, author, date, link_to_article, full_text, article_polarity, article_subjectivity)
 
         if parent_id:
-            self.conn.create_relationship(parent_id, article_id)
+            parent_article = self.conn.get_article_by_id(parent_id)
+            relevance_score = self.relevance_model.get_relevance_score(full_text, parent_article['text'])
+            self.conn.create_relationship_with_score(parent_id, article_id, relevance_score)
 
         cant_be_scraped = [] #to get a sense of how many links outside of the general time format
         filtered_links = []

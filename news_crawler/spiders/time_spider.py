@@ -2,14 +2,13 @@ import scrapy
 from scrapy_selenium import SeleniumRequest
 from neo4j import GraphDatabase
 from textblob import TextBlob
-from .spider_models.relevance_model import Relevance_Model
+from ..spider_models.relevance_model import Relevance_Model
 from dotenv import load_dotenv
 import nltk
 nltk.download('wordnet')
 import os
 
 load_dotenv()
-
 
 class Neo4jConnection:
     def __init__(self, uri, user, password):
@@ -34,9 +33,9 @@ class Neo4jConnection:
 
 class TimeSpider(scrapy.Spider):
     name = "time"
-    max_depth = 2  # deepest layer the spider should scrape 
+    max_depth = 4  # deepest layer the spider should scrape 
     article_ids = {}
-    model_connection = Relevance_Model()
+    #model_connection = Relevance_Model()
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
@@ -129,7 +128,7 @@ class TimeSpider(scrapy.Spider):
             yield SeleniumRequest(url=nested_link, callback=self.parse_article, meta={'depth': depth + 1, 'parent_id': article_id})
 
     def closed(self, reason):
-            self.conn.close()
+        self.conn.close()
 """
 ------------------DEBUGGING UTILITY-----------------------------------------------      
 

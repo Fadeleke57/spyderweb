@@ -3,6 +3,7 @@ from scrapy_selenium import SeleniumRequest
 from neo4j import GraphDatabase
 from textblob import TextBlob
 from ..spider_models.relevance_model import RelevanceModel
+from .util import build_central_corpus
 from dotenv import load_dotenv
 import os
 load_dotenv()
@@ -35,7 +36,7 @@ class Neo4jConnection:
 
 class TimeSpider(scrapy.Spider):
     name = "time"
-    max_depth = 5  # deepest layer the spider should scrape 
+    max_depth = 3  # deepest layer the spider should scrape 
     article_ids = {}
 
     def __init__(self, search_term=None, *args, **kwargs):
@@ -45,17 +46,7 @@ class TimeSpider(scrapy.Spider):
         USERNAME = os.getenv("NEO4J_USERNAME")
         PASSWORD = os.getenv("NEO4J_PASSWORD")
         self.conn = Neo4jConnection(uri=URI, user=USERNAME, password=PASSWORD)
-         
-        try:
-            with open("news_crawler\data\central_corpus.txt", 'r', encoding='utf-8') as file:
-                central_corpus = file.read()
-        except UnicodeDecodeError:
-            try:
-                with open("news_crawler\data\central_corpus.txt", 'r', encoding='latin-1') as file:
-                    central_corpus = file.read()
-            except UnicodeDecodeError as e:
-                self.logger.error(f"Failed to read central corpus file at path") 
-   
+        central_corpus = build_central_corpus(self.search_term)
         self.relevance_model = RelevanceModel(article=central_corpus, use_nltk=False)
 
     def start_requests(self):

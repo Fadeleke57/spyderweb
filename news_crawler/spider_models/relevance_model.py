@@ -8,7 +8,7 @@ from gensim.similarities import MatrixSimilarity
 nltk.download('punkt')
 
 class RelevanceModel:
-    def __init__(self, article : str, use_nltk=False):
+    def __init__(self, corpus : str, use_nltk=False):
         """
         Initializes the RelevanceModel with a given article (a large body of text).
         
@@ -18,9 +18,9 @@ class RelevanceModel:
         """
         self.use_nltk = use_nltk
         if use_nltk:
-            self.texts = self.split_into_sentences_nltk(article)
+            self.texts = self.split_into_sentences_nltk(corpus)
         else:
-            self.texts = self.split_into_sentences_simple(article)
+            self.texts = self.split_into_sentences_simple(corpus)
         self.dictionary, self.corpus = self.create_corpus(self.texts)
         self.tfidf_model = self.train_tfidf(self.corpus)
 

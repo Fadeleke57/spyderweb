@@ -21,7 +21,7 @@ def clean_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-def build_central_corpus(search_term):
+def build_central_corpus(search_term : str, output_dir=None) -> str: #should only write to a file if output_dir is specified
     NEWS_API_KEY = os.getenv("NEWS_API_KEY")
     central_corpus = ""
     page = 1
@@ -38,13 +38,17 @@ def build_central_corpus(search_term):
         page += 1
         if page > 5:  #limits to first 500 articles for practical purposes
             break
-    write_corpus_to_file(central_corpus, search_term)
+
+    if output_dir:
+        output_file_path = f"{output_dir}/{'_'.join(search_term.lower().split(' '))}_central_corpus.txt"
+        write_corpus_to_file(output_file_path, central_corpus)
+
     return central_corpus
 
-def write_corpus_to_file(corpus, search_term):
-    output_file_path = f"data/{'_'.join(search_term.lower().split(' '))}_central_corpus.txt" #i want to be able to display this when i build out a frontend
-    with open(output_file_path, 'w', encoding='utf-8') as file:
+def write_corpus_to_file(output_path, corpus): #i want to be able to display this when i build out a frontend
+
+    with open(output_path, 'w', encoding='utf-8') as file:
         file.write(corpus)    
-    print(f"Central Corpus written to {output_file_path}")
+    print(f"Central Corpus written to {output_path}")
 
 ##################################################### END ######################################################

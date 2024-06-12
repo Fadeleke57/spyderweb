@@ -6,7 +6,7 @@ from ..spider_models.util import build_central_corpus
 def test_build_central_corpus():
     for search_term in search_terms:
         start_time = time.time()
-        corpus = build_central_corpus(search_term)
+        corpus = build_central_corpus(search_term, "data")
         end_time = time.time()
         
         assert isinstance(corpus, str), "Corpus should be a string"

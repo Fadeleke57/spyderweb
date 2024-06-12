@@ -21,7 +21,7 @@ def clean_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-def build_central_corpus(search_term : str, output_dir=None) -> str: #should only write to a file if output_dir is specified
+def build_central_corpus(search_term : str, output_dir : str | None) -> str: #should only write to a file if output_dir is specified
     NEWS_API_KEY = os.getenv("NEWS_API_KEY")
     central_corpus = ""
     page = 1

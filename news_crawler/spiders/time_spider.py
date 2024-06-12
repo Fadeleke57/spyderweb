@@ -41,16 +41,16 @@ class TimeSpider(scrapy.Spider):
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
-        self.search_term = "+".join(search_term.split(" "))
+        self.search_term = search_term
         URI = os.getenv("NEO4J_URI")
         USERNAME = os.getenv("NEO4J_USERNAME")
         PASSWORD = os.getenv("NEO4J_PASSWORD")
         self.conn = Neo4jConnection(uri=URI, user=USERNAME, password=PASSWORD)
-        central_corpus = build_central_corpus(self.search_term, "data")
+        central_corpus = build_central_corpus(self.search_term, output_dir="news_crawler/data")
         self.relevance_model = RelevanceModel(corpus=central_corpus, use_nltk=False)
 
     def start_requests(self):
-        search_term = self.search_term
+        search_term = "+".join(self.search_term.split(" ")) #this is how Time's url is formatted for spaces
         start_urls = [f'https://time.com/search/?q={search_term}']
         for url in start_urls:
             yield SeleniumRequest(url=url, callback=self.parse_search_results, meta={'depth': 1})

@@ -41,13 +41,13 @@ class TimeSpider(scrapy.Spider):
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
-        self.search_term = search_term
+        self.search_term = "+".join(search_term.split(" "))
         URI = os.getenv("NEO4J_URI")
         USERNAME = os.getenv("NEO4J_USERNAME")
         PASSWORD = os.getenv("NEO4J_PASSWORD")
         self.conn = Neo4jConnection(uri=URI, user=USERNAME, password=PASSWORD)
-        central_corpus = build_central_corpus(self.search_term)
-        self.relevance_model = RelevanceModel(article=central_corpus, use_nltk=False)
+        central_corpus = build_central_corpus(self.search_term, "data")
+        self.relevance_model = RelevanceModel(corpus=central_corpus, use_nltk=False)
 
     def start_requests(self):
         search_term = self.search_term

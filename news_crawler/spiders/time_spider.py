@@ -3,7 +3,7 @@ from scrapy_selenium import SeleniumRequest
 from neo4j import GraphDatabase
 from textblob import TextBlob
 from ..spider_models.relevance_model import RelevanceModel
-from .util import build_central_corpus
+from ..spider_models.util import build_central_corpus
 from dotenv import load_dotenv
 import os
 load_dotenv()

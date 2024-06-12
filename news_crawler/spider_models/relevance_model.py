@@ -123,4 +123,3 @@ class RelevanceModel:
         """
         score = self.calculate_similarity(text1, text2)
         return score
-

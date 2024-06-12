@@ -36,7 +36,7 @@ class Neo4jConnection:
 
 class TimeSpider(scrapy.Spider):
     name = "time"
-    max_depth = 3  # deepest layer the spider should scrape 
+    max_depth = 2  # deepest layer the spider should scrape 
     article_ids = {}
 
     def __init__(self, search_term=None, *args, **kwargs):

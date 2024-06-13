@@ -41,6 +41,8 @@ class TimeSpider(scrapy.Spider):
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
+        if not search_term:
+            raise ValueError("search_term is required")
         self.search_term = search_term
         URI = os.getenv("NEO4J_URI")
         USERNAME = os.getenv("NEO4J_USERNAME")

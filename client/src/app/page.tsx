@@ -1,36 +1,16 @@
-'use client'
-
-import React, { useState } from 'react';
-import axios from 'axios';
-import toast from 'react-hot-toast';
+import React from 'react';
+import StartScraping from './StartScraping';
+import GraphDisplay from './Graph';
 import styles from './page.module.css'
 
-const StartScraping = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const handleSubmit = async (e : any) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post('/api/start-scraping', { searchTerm });
-      toast.success(response.data.message);
-    } catch (error) {
-      toast.error('Failed to start scraping process');
-    }
-  };
-
+const Home: React.FC = () => {
   return (
     <div className={styles.main}>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Enter search term"
-        />
-        <button type="submit">Start Scraping</button>
-      </form>
+      <h1>SpyderWeb Beta</h1>
+      <StartScraping />
+      <GraphDisplay />
     </div>
   );
 };
 
-export default StartScraping;
+export default Home;

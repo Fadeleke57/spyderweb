@@ -6,18 +6,27 @@ dotenv.config();
 
 const router = express.Router();
 
-router.post('/start-scraping', (req, res) => {
+router.post('/api/start-scraping', (req, res) => {
   const { searchTerm } = req.body;
   if (!searchTerm) {
     return res.status(400).json({ message: 'searchTerm is required' });
   }
 
-  const scrapyProcess = spawn('scrapy', ['crawl', 'time', '-a', `search_term=${searchTerm}`], {
-    cwd: process.env.SCRAPY_PROJECT_DIR,
+  const scrapyProjectDir = process.env.SCRAPY_PROJECT_DIR || '/app/news_crawler';
+  const scrapyCommand = 'scrapy';
+  const scrapyArgs = ['crawl', 'time', '-a', `search_term=${searchTerm}`];
+  
+  console.log('Starting Scrapy process with the following details:');
+  console.log(`cwd: ${scrapyProjectDir}`);
+  console.log(`command: ${scrapyCommand}`);
+  console.log(`args: ${scrapyArgs.join(' ')}`);
+
+  const scrapyProcess = spawn(scrapyCommand, scrapyArgs, {
+    cwd: scrapyProjectDir,
     shell: true,
   });
 
-  let processOutput = ''; //output of scrapy process
+  let processOutput = '';
 
   scrapyProcess.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
@@ -29,9 +38,9 @@ router.post('/start-scraping', (req, res) => {
     processOutput += data.toString();
   });
 
-  scrapyProcess.on('close', (code) => { //scrapy process done
+  scrapyProcess.on('close', (code) => {
     console.log(`child process exited with code ${code}`);
-    if (!res.headersSent) {  //avoid sending response if headers have already been sent
+    if (!res.headersSent) {
       if (code === 0) {
         res.status(200).json({ message: 'Scraping process started successfully', output: processOutput });
       } else {
@@ -40,9 +49,9 @@ router.post('/start-scraping', (req, res) => {
     }
   });
 
-  scrapyProcess.on('error', (error) => { //scrapy process error
+  scrapyProcess.on('error', (error) => {
     console.error(`error: ${error.message}`);
-    if (!res.headersSent) { //avoid sending response if headers have already been sent
+    if (!res.headersSent) {
       res.status(500).json({ message: 'Failed to start scraping process', error: error.message });
     }
   });

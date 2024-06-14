@@ -36,14 +36,16 @@ class Neo4jConnection:
 
 class TimeSpider(scrapy.Spider):
     name = "time"
-    max_depth = 6  # deepest layer the spider should scrape 
+    max_depth = 3  # deepest layer the spider should scrape 
     article_ids = {}
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
-        if not search_term:
-            raise ValueError("search_term is required")
+        search_term="saudi oil"
         self.search_term = search_term
+        if not self.search_term:
+            self.logger.error("No search term provided. The spider will not run.")
+            return
         URI = os.getenv("NEO4J_URI")
         USERNAME = os.getenv("NEO4J_USERNAME")
         PASSWORD = os.getenv("NEO4J_PASSWORD")

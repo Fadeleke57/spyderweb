@@ -143,3 +143,6 @@ logs/
 #misc
 result.json
 data/
+
+node_modules/
+Dockerfile

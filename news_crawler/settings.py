@@ -10,7 +10,7 @@
 from shutil import which
 
 SELENIUM_DRIVER_NAME = 'chrome'
-SELENIUM_DRIVER_EXECUTABLE_PATH = which('chromedriver')
+SELENIUM_DRIVER_EXECUTABLE_PATH = '/usr/local/bin/chromedriver'
 SELENIUM_DRIVER_ARGUMENTS = ['--headless']  # '--headless' if using chrome driver in headless mod
 
 BOT_NAME = "news_crawler"
@@ -58,7 +58,6 @@ ROBOTSTXT_OBEY = False
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy_selenium.SeleniumMiddleware': 800,
     "news_crawler.middlewares.SeleniumMiddleware": 543,
 }
 

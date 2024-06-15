@@ -3,8 +3,7 @@ import React from 'react';
 const GraphDisplay: React.FC = () => {
   return (
     <div>
-      <h2>Graph Display</h2>
-      {/* Here you would render the Neo4j graph */}
+      <h2>Some Data</h2>
     </div>
   );
 };

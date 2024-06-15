@@ -12,22 +12,21 @@ router.get('/start-scraping', (req, res) => {
 
 router.post('/start-scraping', (req, res) => {
   console.log('Received request to start scraping');
-  const { searchTerm } = req.body;
-  if (!searchTerm) {
-    return res.status(400).json({ message: 'searchTerm is required' });
+  const { searchTerm, maxDepth } = req.body;
+  if (!searchTerm || !maxDepth) { //might not need the check fo rmax_depth and just have it set to 2 as default
+    return res.status(400).json({ message: 'searchTerm and maxDepth are required' });
   }
 
-  const scrapyContainer = 'spyderweb-scrapy-1'; // in docker desktop
+  const scrapyContainer = 'spyderweb-scrapy-1'; // Replace with your actual Scrapy container name
   const scrapyCommand = 'scrapy';
-  const scrapyArgs = ['crawl', 'time', '-a', `search_term="${searchTerm}"`];
+  
+  const scrapyArgs = ['crawl', 'time', '-a', `search_term="${searchTerm}"`, '-s', `DEPTH_LIMIT=${maxDepth}`]; // Using the -s flag to set the DEPTH_LIMIT setting
   const dockerArgs = ['exec', scrapyContainer, scrapyCommand, ...scrapyArgs];
 
   console.log('Starting Scrapy process with the following details:');
   console.log(`docker command: docker ${dockerArgs.join(' ')}`);
 
-  const scrapyProcess = spawn('docker', dockerArgs, { 
-    shell: true
-  });
+  const scrapyProcess = spawn('docker', dockerArgs, { shell: true });
 
   let processOutput = '';
 
@@ -45,7 +44,7 @@ router.post('/start-scraping', (req, res) => {
     console.log(`child process exited with code ${code}`);
     if (!res.headersSent) {
       if (code === 0) {
-        res.status(200).json({ message: 'Scraping process started successfully', output: "Graph should be displayed now!" });
+        res.status(200).json({ message: 'Scraping process started successfully', output: "Scraping finished!" });
       } else {
         res.status(500).json({ message: 'Failed to start scraping process', output: processOutput });
       }

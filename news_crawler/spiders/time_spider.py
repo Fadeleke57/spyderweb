@@ -36,7 +36,6 @@ class Neo4jConnection:
 
 class TimeSpider(scrapy.Spider):
     name = "time"
-    max_depth = 1  # deepest layer the spider should scrape 
     article_ids = {}
 
     def __init__(self, search_term=None, *args, **kwargs):
@@ -56,7 +55,7 @@ class TimeSpider(scrapy.Spider):
         search_term = "+".join(self.search_term.split(" ")) #this is how Time's url is formatted for spaces
         start_urls = [f'https://time.com/search/?q={search_term}']
         for url in start_urls:
-            yield SeleniumRequest(url=url, callback=self.parse_search_results, meta={'depth': 1})
+            yield SeleniumRequest(url=url, callback=self.parse_search_results)
 
     def parse_search_results(self, response):
         if response.status != 200:
@@ -70,7 +69,7 @@ class TimeSpider(scrapy.Spider):
         for article in articles:
             article_link = article.css('div.headline a::attr(href)').get()
             if article_link:
-                yield SeleniumRequest(url=article_link, callback=self.parse_article, meta={'depth': response.meta['depth'] + 1})
+                yield SeleniumRequest(url=article_link, callback=self.parse_article)
 
     def parse_article(self, response):
         if response.status != 200:
@@ -79,12 +78,12 @@ class TimeSpider(scrapy.Spider):
 
         header = response.css('h1::text').get()
         link_to_article = response.url
-        depth = response.meta['depth']
+        #depth = response.meta['depth']
         parent_id = response.meta.get('parent_id', None)
 
-        if depth > self.max_depth:
-            self.logger.info(f"Reached maximum depth of {self.max_depth} for link: {link_to_article}")
-            return
+        #if depth > self.max_depth:
+            #self.logger.info(f"Reached maximum depth of {self.max_depth} for link: {link_to_article}")
+            #return
 
         dates = response.css('time::text').getall()
         date = " | ".join(dates)
@@ -134,7 +133,7 @@ class TimeSpider(scrapy.Spider):
         }
 
         for nested_link in filtered_links:
-            yield SeleniumRequest(url=nested_link, callback=self.parse_article, meta={'depth': depth + 1, 'parent_id': article_id})
+            yield SeleniumRequest(url=nested_link, callback=self.parse_article, meta={'parent_id': article_id})
 
     def closed(self, reason):
         self.conn.close()

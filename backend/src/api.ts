@@ -6,24 +6,27 @@ dotenv.config();
 
 const router = express.Router();
 
-router.post('/api/start-scraping', (req, res) => {
+router.get('/start-scraping', (req, res) => {
+  res.status(200).json({ message: 'Hello! Start scraping with a POST request' });
+});
+
+router.post('/start-scraping', (req, res) => {
+  console.log('Received request to start scraping');
   const { searchTerm } = req.body;
   if (!searchTerm) {
     return res.status(400).json({ message: 'searchTerm is required' });
   }
 
-  const scrapyProjectDir = process.env.SCRAPY_PROJECT_DIR || '/app/news_crawler';
+  const scrapyContainer = 'spyderweb-scrapy-1'; // in docker desktop
   const scrapyCommand = 'scrapy';
-  const scrapyArgs = ['crawl', 'time', '-a', `search_term=${searchTerm}`];
-  
-  console.log('Starting Scrapy process with the following details:');
-  console.log(`cwd: ${scrapyProjectDir}`);
-  console.log(`command: ${scrapyCommand}`);
-  console.log(`args: ${scrapyArgs.join(' ')}`);
+  const scrapyArgs = ['crawl', 'time', '-a', `search_term="${searchTerm}"`];
+  const dockerArgs = ['exec', scrapyContainer, scrapyCommand, ...scrapyArgs];
 
-  const scrapyProcess = spawn(scrapyCommand, scrapyArgs, {
-    cwd: scrapyProjectDir,
-    shell: true,
+  console.log('Starting Scrapy process with the following details:');
+  console.log(`docker command: docker ${dockerArgs.join(' ')}`);
+
+  const scrapyProcess = spawn('docker', dockerArgs, { 
+    shell: true
   });
 
   let processOutput = '';
@@ -42,7 +45,7 @@ router.post('/api/start-scraping', (req, res) => {
     console.log(`child process exited with code ${code}`);
     if (!res.headersSent) {
       if (code === 0) {
-        res.status(200).json({ message: 'Scraping process started successfully', output: processOutput });
+        res.status(200).json({ message: 'Scraping process started successfully', output: "Graph should be displayed now!" });
       } else {
         res.status(500).json({ message: 'Failed to start scraping process', output: processOutput });
       }

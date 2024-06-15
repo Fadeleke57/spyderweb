@@ -36,12 +36,11 @@ class Neo4jConnection:
 
 class TimeSpider(scrapy.Spider):
     name = "time"
-    max_depth = 3  # deepest layer the spider should scrape 
+    max_depth = 1  # deepest layer the spider should scrape 
     article_ids = {}
 
     def __init__(self, search_term=None, *args, **kwargs):
         super(TimeSpider, self).__init__(*args, **kwargs)
-        search_term="saudi oil"
         self.search_term = search_term
         if not self.search_term:
             self.logger.error("No search term provided. The spider will not run.")
@@ -50,7 +49,7 @@ class TimeSpider(scrapy.Spider):
         USERNAME = os.getenv("NEO4J_USERNAME")
         PASSWORD = os.getenv("NEO4J_PASSWORD")
         self.conn = Neo4jConnection(uri=URI, user=USERNAME, password=PASSWORD)
-        central_corpus = build_central_corpus(self.search_term, output_dir="news_crawler/data")
+        central_corpus = build_central_corpus(self.search_term, output_dir="../data") # needs to be changed depending on where "scrapy crawl time" is run
         self.relevance_model = RelevanceModel(corpus=central_corpus, use_nltk=False)
 
     def start_requests(self):

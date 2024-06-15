@@ -36,19 +36,19 @@ def build_central_corpus(search_term : str, output_dir : str | None) -> str: #sh
                 cleaned_content = clean_text(content)
                 central_corpus += cleaned_content + " "
         page += 1
-        if page > 5:  #limits to first 500 articles for practical purposes
+        if page > 5:  #limits to first 500 articles for now
             break
 
-    if output_dir:
-        output_file_path = f"{output_dir}/{'_'.join(search_term.lower().split(' '))}_central_corpus.txt"
-        write_corpus_to_file(output_file_path, central_corpus)
+    #if output_dir:
+        #output_file_path = f"{output_dir}/{'_'.join(search_term.lower().split(' '))}_central_corpus.txt"
+        #write_corpus_to_file(output_file_path, central_corpus)
 
     return central_corpus
 
-def write_corpus_to_file(output_path, corpus): #i want to be able to display this when i build out a frontend
+#def write_corpus_to_file(output_path, corpus): #i want to be able to display this when i build out a frontend
 
-    with open(output_path, 'w', encoding='utf-8') as file:
-        file.write(corpus)    
-    print(f"Central Corpus written to {output_path}")
+    #with open(output_path, 'w', encoding='utf-8') as file:
+        #file.write(corpus)    
+    #print(f"Central Corpus written to {output_path}")
 
 ##################################################### END ######################################################

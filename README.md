@@ -1,1 +1,1 @@
-new way to consume data
+efficient way to traverse the news

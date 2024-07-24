@@ -66,7 +66,6 @@ env.bak/
 venv.bak/
 vars/
 # If using Docker:
-Dockerfile
 docker-compose*.yml
 docker-compose*.override.yml
 docker-compose.override.yml
@@ -145,4 +144,3 @@ result.json
 data/
 
 node_modules/
-Dockerfile

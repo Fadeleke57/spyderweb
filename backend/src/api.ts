@@ -13,11 +13,11 @@ router.get('/start-scraping', (req, res) => {
 router.post('/start-scraping', (req, res) => {
   console.log('Received request to start scraping');
   const { searchTerm, maxDepth } = req.body;
-  if (!searchTerm || !maxDepth) { //might not need the check fo rmax_depth and just have it set to 2 as default
+  if (!searchTerm || !maxDepth) { 
     return res.status(400).json({ message: 'searchTerm and maxDepth are required' });
   }
 
-  const scrapyContainer = 'spyderweb-scrapy-1'; // Replace with your actual Scrapy container name
+  const scrapyContainer = 'spyderweb-scrapy-1';
   const scrapyCommand = 'scrapy';
   
   const scrapyArgs = ['crawl', 'time', '-a', `search_term="${searchTerm}"`, '-s', `DEPTH_LIMIT=${maxDepth}`]; // Using the -s flag to set the DEPTH_LIMIT setting

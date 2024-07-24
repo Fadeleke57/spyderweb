@@ -32,9 +32,8 @@ class SeleniumMiddleware:
         options.add_argument('--disable-setuid-sandbox')
         options.add_argument('--remote-debugging-port=9222')
 
-        service = Service('/usr/local/bin/chromedriver')  # Updated path to chromedriver in the Docker container
-        print(f"Using chromedriver at: {service.path}")
-        self.driver = webdriver.Chrome(service=service, options=options)
+
+        self.driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver', options=options)
 
     def spider_opened(self, spider):
         pass

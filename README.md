@@ -32,7 +32,14 @@ scrapy crawl time --a search_term="{TERM}"
 
 Run Client:
 ```
+npm install
 npm run dev
+```
+
+Run Backend:
+```
+npm install
+node server.js
 ```
 
 
